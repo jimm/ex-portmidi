@@ -11,6 +11,9 @@ defmodule PortMidi.Output do
   def write(server, message), do:
     GenServer.call(server, {:write, message})
 
+  def write_sysex(server, when_tstamp, message_binary), do:
+    GenServer.call(server, {:write, message_binary, when_tstamp})
+
   def stop(server), do:
     GenServer.stop(server)
 
@@ -39,6 +42,11 @@ defmodule PortMidi.Output do
 
   def handle_call({:write, message}, _from, stream) do
     response = do_write(stream, [message])
+    {:reply, response, stream}
+  end
+
+  def handle_call({:write_sysex, when_tstamp, message_binary}, _from, stream) do
+    response = do_write_sysex(stream, when_tstamp, message_binary)
     {:reply, response, stream}
   end
 

@@ -99,6 +99,41 @@ static ERL_NIF_TERM do_write(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]
   );
 }
 
+static ERL_NIF_TERM do_write_sysex(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  static PortMidiStream ** stream;
+
+  ErlNifResourceType* streamType = (ErlNifResourceType*)enif_priv_data(env);
+  if(!enif_get_resource(env, argv[0], streamType, (PortMidiStream **) &stream)) {
+    return enif_make_badarg(env);
+  }
+
+  ERL_NIF_TERM erlWhen = argv[1];
+  int32_t when;
+  enif_get_int(env, erlWhen, &when);
+
+  ERL_NIF_TERM erlMsg = argv[2];
+  ErlNifBinary msgBin;
+  if (!enif_inspect_binary(env, erlMsg, &msgBin)) {
+    return enif_make_badarg(env);
+  }
+
+  PmError writeError;
+  writeError = Pm_WriteSysEx(*stream, when, msgBin.data);
+
+  if (writeError == pmNoError) {
+    return enif_make_atom(env, "ok");
+  }
+
+  const char * writeErrorMsg;
+  writeErrorMsg = Pm_GetErrorText(writeError);
+
+  return enif_make_tuple2(
+    env,
+    enif_make_atom(env, "error"),
+    enif_make_string(env, writeErrorMsg, ERL_NIF_LATIN1)
+  );
+}
+
 static ERL_NIF_TERM do_close(ErlNifEnv* env, int arc, const ERL_NIF_TERM argv[]) {
   static PortMidiStream ** stream;
 
@@ -115,6 +150,7 @@ static ERL_NIF_TERM do_close(ErlNifEnv* env, int arc, const ERL_NIF_TERM argv[])
 static ErlNifFunc nif_funcs[] = {
   {"do_open",  2, do_open},
   {"do_write", 2, do_write},
+  {"do_write_sysex", 3, do_write_sysex},
   {"do_close", 1, do_close}
 };
 

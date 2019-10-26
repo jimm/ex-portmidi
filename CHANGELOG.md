@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.2.0
+
+* Support sysex input and output.
+
 ## 5.1.2
 
 * `@ 6f2b0aa` - Fix Elixir 1.7 warnings
